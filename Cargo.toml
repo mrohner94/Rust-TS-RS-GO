@@ -1,5 +1,5 @@
 [package]
-name = "Rust-TS-RS-GO"
+name = "rust_ts_rs_go"
 version = "0.1.0"
 edition = "2021"
 

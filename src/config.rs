@@ -18,7 +18,6 @@ impl TryFrom<Opts> for Config {
         let operation = value.args.try_into()?;
         let config = get_config(value.config)?;
         let pwd = get_pwd(value.pwd)?;
-
         return Ok(Config {
             operation,
             config,
@@ -82,13 +81,13 @@ fn get_config(config: Option<PathBuf>) -> Result<PathBuf> {
     }
 
     let loc = std::env::var("XDG_CONFIG_HOME").context("unable to get XDG_CONFIG_HOME")?;
+
     let mut loc = PathBuf::from(loc);
 
     loc.push("projector");
     loc.push("projector.json");
 
     return Ok(loc);
-
 }
 
 fn get_pwd(pwd: Option<PathBuf>) -> Result<PathBuf> {

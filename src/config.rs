@@ -18,10 +18,11 @@ impl TryFrom<Opts> for Config {
         let operation = value.args.try_into()?;
         let config = get_config(value.config)?;
         let pwd = get_pwd(value.pwd)?;
+
         return Ok(Config {
             operation,
             config,
-            pwd
+            pwd,
         });
     }
 }
@@ -36,16 +37,17 @@ pub enum Operation {
 impl TryFrom<Vec<String>> for Operation {
     type Error = anyhow::Error;
 
-    fn try_from(value: Vec<String>) -> Result<Self, Self::Error> {
+    fn try_from(value: Vec<String>) -> Result<Self> {
         let mut value = value;
         if value.len() == 0 {
-            return Ok(Operation::Print(None))
+            return Ok(Operation::Print(None));
         }
 
         let term = value.get(0).expect("expect to exist");
         if term == "add" {
             if value.len() != 3 {
-                return Err(anyhow!("operation add expects 2 arguments but got {}", value.len() - 1))
+                let err = anyhow!("operation add expects 2 arguments but got {}", value.len() - 1);
+                return Err(err);
             }
 
             let mut drain = value.drain(1..=2);
@@ -58,7 +60,8 @@ impl TryFrom<Vec<String>> for Operation {
 
         if term == "rm" {
             if value.len() != 2 {
-                return Err(anyhow!("operation remove expects 1 argument but got {}", value.len() - 1))
+                let err = anyhow!("operation remove expects 1 arguments but got {}", value.len() - 1);
+                return Err(err);
             }
 
             let arg = value.pop().expect("to exist");
@@ -66,12 +69,11 @@ impl TryFrom<Vec<String>> for Operation {
         }
 
         if value.len() > 1 {
-            return Err(anyhow!("operation print expects 0 or 1 argument but got {}", value.len()))
-
-        }            
+            let err = anyhow!("operation print expects 0 or 1 arguments but got {}", value.len());
+            return Err(err);
+        }
         let arg = value.pop().expect("to exist");
         return Ok(Operation::Print(Some(arg)));
-
     }
 }
 
@@ -80,14 +82,23 @@ fn get_config(config: Option<PathBuf>) -> Result<PathBuf> {
         return Ok(v);
     }
 
-    let loc = std::env::var("XDG_CONFIG_HOME").context("unable to get XDG_CONFIG_HOME")?;
+    let locx = std::env::var("HOME")        
+    .context("unable to get XDG_CONFIG_HOME")?;
 
-    let mut loc = PathBuf::from(loc);
+    let mut locx = PathBuf::from(locx);
+    // let my_str = locx.into_os_string().into_string().unwrap();
+    // print!("{}", my_str);
 
-    loc.push("projector");
-    loc.push("projector.json");
+    // let loc = std::env::var("XDG_CONFIG_HOME")
+    //     .context("unable to get XDG_CONFIG_HOME")?;
+    // println!("{}", loc);
 
-    return Ok(loc);
+    // let mut loc = PathBuf::from(loc);
+
+    locx.push("projector");
+    locx.push("projector.json");
+
+    return Ok(locx);
 }
 
 fn get_pwd(pwd: Option<PathBuf>) -> Result<PathBuf> {
@@ -107,7 +118,6 @@ mod test {
     use super::Config;
 
 
-
     #[test]
     fn test_print_all() -> Result<()> {
         let opts: Config = Opts {
@@ -115,7 +125,6 @@ mod test {
             pwd: None,
             config: None,
         }.try_into()?;
-       
 
         assert_eq!(opts.operation, Operation::Print(None));
         return Ok(());
